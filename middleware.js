@@ -3,12 +3,12 @@ import jwt from "jsonwebtoken"
 
 export function middleware(req) {
   const token = req.cookies.get("token")?.value
-  const { pathname } = req.nextUrl
+  const pathname = req.nextUrl?.pathname || ""
 
   const isAdminRoute = pathname.startsWith("/admin")
 
-  if (!token && isAdminRoute) {
-    return NextResponse.redirect(new URL("/admin", req.url))
+  if (isAdminRoute && !token) {
+    return NextResponse.redirect(new URL("/login", req.url))
   }
 
   if (token) {
@@ -16,13 +16,12 @@ export function middleware(req) {
       const user = jwt.verify(token, process.env.JWT_SECRET)
 
       if (isAdminRoute && user.role !== "admin") {
-        return NextResponse.redirect(new URL("/admin", req.url))
+        return NextResponse.redirect(new URL("/", req.url))
       }
 
       return NextResponse.next()
-
     } catch (err) {
-      return NextResponse.redirect(new URL("/admin", req.url))
+      return NextResponse.redirect(new URL("/login", req.url))
     }
   }
 
@@ -30,5 +29,5 @@ export function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"]
+  matcher: ["/admin/:path*"],
 }
