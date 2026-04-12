@@ -6,20 +6,19 @@ export default function Login() {
   const [pass, setPass] = useState("")
 
 const login = async () => {
+  console.log("LOGIN CLICKED")
+
   const res = await fetch("/api/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user, pass }),
-    credentials: "include"
+    body: JSON.stringify({ user, pass })
   })
 
   const data = await res.json()
 
-  if (data.success) {
-    window.location.href = "/admin/dashboard"
-  } else {
-    alert("Invalid login")
-  }
+  console.log("LOGIN RESPONSE:", data)
+
+  alert(JSON.stringify(data))
 }
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-500 via-emerald-900 to-black">
