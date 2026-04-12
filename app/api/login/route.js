@@ -1,5 +1,9 @@
 export async function POST(req) {
+  const body = await req.json()
+
   return Response.json({
-    debug: "LOGIN API HIT SUCCESSFULLY"
+    success: true,
+    received: body,
+    message: "LOGIN API CONFIRMED WORKING"
   })
 }
