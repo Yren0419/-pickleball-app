@@ -14,8 +14,6 @@ const login = async () => {
 
   const data = await res.json()
 
-  console.log("LOGIN RESPONSE:", data)
-
   if (data.success) {
     window.location.href = "/admin/dashboard"
   } else {
