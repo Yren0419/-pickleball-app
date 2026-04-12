@@ -9,11 +9,12 @@ const login = async () => {
   const res = await fetch("/api/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user, pass }),
-    credentials: "include"
+    body: JSON.stringify({ user, pass })
   })
 
   const data = await res.json()
+
+  console.log("LOGIN RESPONSE:", data)
 
   if (data.success) {
     window.location.href = "/admin/dashboard"
@@ -21,7 +22,6 @@ const login = async () => {
     alert("Invalid login")
   }
 }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-500 via-emerald-900 to-black">
 
