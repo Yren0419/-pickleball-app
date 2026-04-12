@@ -9,7 +9,8 @@ const login = async () => {
   const res = await fetch("/api/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user, pass })
+    body: JSON.stringify({ user, pass }),
+    credentials: "include"
   })
 
   const data = await res.json()

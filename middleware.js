@@ -1,0 +1,31 @@
+import { NextResponse } from "next/server"
+import jwt from "jsonwebtoken"
+
+export function middleware(req) {
+  const token = req.cookies.get("token")?.value
+  const { pathname } = req.nextUrl
+
+  const isAdminRoute = pathname.startsWith("/admin")
+
+  if (isAdminRoute && !token) {
+    return NextResponse.redirect(new URL("/login", req.url))
+  }
+
+  try {
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET)
+
+      if (isAdminRoute && decoded.role !== "admin") {
+        return NextResponse.redirect(new URL("/login", req.url))
+      }
+    }
+  } catch (err) {
+    return NextResponse.redirect(new URL("/login", req.url))
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: ["/admin/:path*"]
+}
