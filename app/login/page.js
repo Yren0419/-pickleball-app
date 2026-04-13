@@ -6,8 +6,6 @@ export default function Login() {
   const [pass, setPass] = useState("")
 
 const login = async () => {
-  console.log("LOGIN CLICKED")
-
   const res = await fetch("/api/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -16,9 +14,13 @@ const login = async () => {
 
   const data = await res.json()
 
-  console.log("LOGIN RESPONSE:", data)
+  console.log("LOGIN RESULT:", data)
 
-  alert(JSON.stringify(data))
+  if (data.success) {
+    window.location.href = "/admin/dashboard"
+  } else {
+    alert("Invalid login")
+  }
 }
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-500 via-emerald-900 to-black">
@@ -31,17 +33,17 @@ const login = async () => {
         </h1>
 
         <input
-  placeholder="Username"
-  value={user}
-  onChange={(e) => setUser(e.target.value.trim())}
-/>
+        placeholder="Username"
+          value={user}
+        onChange={(e) => setUser(e.target.value.trim())}
+            />
 
-<input
-  type="password"
-  placeholder="Password"
-  value={pass}
-  onChange={(e) => setPass(e.target.value.trim())}
-/>
+      <input
+     type="password"
+     placeholder="Password"
+     value={pass}
+     onChange={(e) => setPass(e.target.value.trim())}
+       />
 
         <button
           onClick={login}
