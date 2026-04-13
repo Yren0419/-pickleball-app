@@ -77,6 +77,10 @@ export default function Admin() {
         >
           {loading ? "Logging in..." : "Login"}
         </button>
+
+        <a href="/" className="text-green-600 font-semibold hover:underline">
+            ← Home
+          </a>
       </div>
     </div>
   )
