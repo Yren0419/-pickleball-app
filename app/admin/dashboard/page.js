@@ -5,7 +5,23 @@ import { useRouter } from "next/navigation"
 
 export default function Dashboard() {
   const router = useRouter()
+  const [bookings, setBookings] = useState([]);
+  const [date, setDate] = useState("");
 
+
+  const fetchBookings = async () => {
+    const url = date ? `/api/book?date=${date}` : "/api/book";
+    const res = await fetch(url);
+    const data = await res.json();
+    setBookings(data);
+  };
+     useEffect(() => {
+    fetchBookings();
+  }, [date]);
+   
+  // 💰 Compute earnings
+  const total = bookings.reduce((sum, b) => sum + (b.price || 0), 0);
+  
   const [loggingOut, setLoggingOut] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
@@ -81,13 +97,17 @@ export default function Dashboard() {
     loadBookings()
   }
 
-  // ⚠️ CANCEL BOOKING
+  // ❌ Cancel booking
   const cancelBooking = async (id) => {
-    if (!confirm("Cancel this booking?")) return
+    if (!confirm("Cancel this booking?")) return;
 
-    await fetch(`/api/book/${id}`, { method: "PUT" })
-    loadBookings()
-  }
+    await fetch("/api/book", {
+      method: "DELETE",
+      body: JSON.stringify({ id })
+    });
+
+    fetchBookings();
+  };
 
   // 📤 UPLOAD IMAGE
   const upload = async () => {
@@ -133,11 +153,30 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gray-100 p-6">
 
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+      <div className="max-w-4xl mx-auto">
+
+        {/* HEADER */}
+        <div className="bg-white p-6 rounded-2xl shadow mb-6">
+          <h1 className="text-2xl font-bold">D'bckyrd Admin</h1>
+          <p className="text-gray-500">Booking Management</p>
+        </div>
+
+        {/* FILTER + STATS */}
+        <div className="bg-white p-4 rounded-xl shadow mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+
+          <input
+            type="date"
+            className="border p-2 rounded"
+            onChange={(e) => setDate(e.target.value)}
+          />
+
+          <div className="text-lg font-semibold">
+            💰 Total: ₱{total}
+          </div>
+
+        </div>
 
         <button
           onClick={() => setShowConfirm(true)}
@@ -217,51 +256,43 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* BOOKINGS */}
-      <div className="bg-white p-4 rounded shadow">
-        <h2 className="font-bold mb-4">Bookings</h2>
+        {/* BOOKINGS LIST */}
+        <div className="space-y-3">
+          {bookings.map((b) => (
+            <div
+              key={b._id}
+              className="bg-white p-4 rounded-xl shadow flex justify-between items-center"
+            >
+              <div>
+                <p className="font-bold">{b.name}</p>
+                <p className="text-sm text-gray-500">
+                  {b.date} | {b.start} - {b.end}
+                </p>
+                <p className="text-sm">₱{b.price}</p>
+              </div>
 
-        {data.length === 0 ? (
-          <p>No bookings yet</p>
-        ) : (
-          data.map((b) => (
-            <div key={b._id} className="border p-3 mb-3 rounded">
-
-              <p><b>{b.name}</b></p>
-              <p>{b.contact}</p>
-              <p>{b.date}</p>
-              <p>{b.start}:00 - {b.end}:00</p>
-
-              <p className="text-sm text-gray-500">
-                Status: {b.status}
-              </p>
-
-              <div className="flex gap-2 mt-2">
-                <button
-                  onClick={() => cancelBooking(b._id)}
-                  className="bg-yellow-500 text-white px-3 py-1 rounded"
-                >
-                  Cancel
-                </button>
-
-                <button
+              <button
+                onClick={() => cancelBooking(b._id)}
+                className="bg-red-500 text-white px-3 py-1 rounded"
+              >
+                Cancel
+              </button>
+              <button
                   onClick={() => deleteBooking(b._id)}
                   className="bg-red-500 text-white px-3 py-1 rounded"
                 >
                   Delete
                 </button>
-              </div>
-
             </div>
-          ))
-        )}
-      </div>
 
+            
+          ))}
+        </div>
+        
       {/* HOME */}
       <a href="/" className="block mt-6 text-blue-500 underline">
         ← Back to Home
       </a>
-
-    </div>
-  )
+      </div>
+  );
 }
