@@ -31,17 +31,17 @@ const login = async () => {
         </h1>
 
         <input
-          placeholder="Username"
-          className="border p-2 w-full mb-3 rounded"
-          onChange={(e) => setUser(e.target.value)}
-        />
+  placeholder="Username"
+  value={user}
+  onChange={(e) => setUser(e.target.value.trim())}
+/>
 
-        <input
-          type="password"
-          placeholder="Password"
-          className="border p-2 w-full mb-5 rounded"
-          onChange={(e) => setPass(e.target.value)}
-        />
+<input
+  type="password"
+  placeholder="Password"
+  value={pass}
+  onChange={(e) => setPass(e.target.value.trim())}
+/>
 
         <button
           onClick={login}
