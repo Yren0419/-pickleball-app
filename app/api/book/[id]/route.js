@@ -1,31 +1,23 @@
 import clientPromise from "@/lib/mongodb"
 import { ObjectId } from "mongodb"
 
-// ❌ DELETE
+// DELETE BOOKING
 export async function DELETE(req, { params }) {
-  const id = params?.id
-
-  if (!id) {
-    return Response.json({ error: "Missing id" }, { status: 400 })
-  }
+  const id = params.id
 
   const client = await clientPromise
   const db = client.db(process.env.DB_NAME)
 
   await db.collection("bookings").deleteOne({
-    _id: new ObjectId(id),
+    _id: new ObjectId(id)
   })
 
   return Response.json({ success: true })
 }
 
-// ⚠️ CANCEL
+// CANCEL BOOKING
 export async function PUT(req, { params }) {
-  const id = params?.id
-
-  if (!id) {
-    return Response.json({ error: "Missing id" }, { status: 400 })
-  }
+  const id = params.id
 
   const client = await clientPromise
   const db = client.db(process.env.DB_NAME)
