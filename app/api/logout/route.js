@@ -1,4 +1,4 @@
-export async function POST() {
+export async function GET() {
   return new Response(
     JSON.stringify({ success: true }),
     {
@@ -9,5 +9,5 @@ export async function POST() {
           "token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict"
       }
     }
-  )
+  );
 }

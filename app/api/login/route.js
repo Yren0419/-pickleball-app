@@ -24,12 +24,14 @@ export async function POST(req) {
   )
 
   // 🍪 SAVE COOKIE
+  
   return new Response(
     JSON.stringify({ success: true }),
     {
       headers: {
-        "Set-Cookie": `token=${token}; Path=/; HttpOnly; SameSite=Strict`
-      }
+  "Set-Cookie": `token=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`
+}
     }
   )
 }
+

@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 export default function Home() {
 const [images, setImages] = useState([]); // 👈 from DB
   const [index, setIndex] = useState(null);
+   const [selectedImage, setSelectedImage] = useState(null);
+
 
   // 📡 FETCH FROM DATABASE
   useEffect(() => {
@@ -25,7 +27,7 @@ const [images, setImages] = useState([]); // 👈 from DB
   };
 
  return (
-    <div className="min-h-screen bg-gradient-to-br from-green-900 to-black">
+    <div className="min-h-screen bg-gradient-to-br from-green-900 to-black p-4 md:p-6">
 
 
        {/* NAVBAR */}
@@ -35,11 +37,16 @@ const [images, setImages] = useState([]); // 👈 from DB
           <h1 className="font-bold text-lg">D'bckyrd</h1>
         </div>
 
-        <div className="flex gap-4">
-          <a href="/book" className="text-green-600 font-semibold">Book</a>
-          <a href="/admin" className="text-green-600 font-semibold">Admin</a>
-          <a href="https://facebook.com" target="_blank"
-          className="text-blue-600 font-semibold hover:underline">Facebook</a>
+        <div className="flex gap-2">
+          <a href="/book" className="bg-green-500 text-white px-4 py-2 rounded-lg">Book Now</a>
+          <a href="/admin" className="bg-gray-800 text-white px-4 py-2 rounded-lg">Admin</a>
+          <a
+  href="https://facebook.com/YOUR_PAGE"
+  target="_blank"
+  className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+>
+  Follow us on Facebook
+</a>
     </div>
       </div>
       {/* HERO */}

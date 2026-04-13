@@ -6,22 +6,19 @@ export default function Admin() {
   const [pass, setPass] = useState("")
   const [loading, setLoading] = useState(false)
 
-  // 🔐 auto redirect if already logged in
+  // 🔐 AUTO REDIRECT IF LOGGED IN
   useEffect(() => {
-    const checkAuth = async () => {
-      const res = await fetch("/api/auth/me")
-      const data = await res.json()
-
-      if (data.loggedIn) {
-        window.location.replace("/admin/dashboard")
-      }
-    }
-
-    checkAuth()
+    fetch("/api/auth/me")
+      .then(res => res.json())
+      .then(data => {
+        if (data.loggedIn) {
+          window.location.replace("/admin/dashboard")
+        }
+      })
   }, [])
 
   const login = async () => {
-    if (loading) return // prevent double click
+    if (loading) return
     setLoading(true)
 
     try {
@@ -36,7 +33,6 @@ export default function Admin() {
       const data = await res.json()
 
       if (data.success) {
-        // smooth redirect (no back button flicker)
         window.location.replace("/admin/dashboard")
       } else {
         alert("Invalid login 😢")
@@ -75,8 +71,8 @@ export default function Admin() {
         <button
           onClick={login}
           disabled={loading}
-          className={`w-full py-2 rounded text-white transition ${
-            loading ? "bg-gray-400" : "bg-green-500 hover:bg-green-600"
+          className={`w-full py-2 rounded text-white ${
+            loading ? "bg-gray-400" : "bg-green-500"
           }`}
         >
           {loading ? "Logging in..." : "Login"}

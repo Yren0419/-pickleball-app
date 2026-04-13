@@ -1,30 +1,34 @@
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
+// ❌ DELETE
 export async function DELETE(req, context) {
-  try {
-    const id = context.params?.id;
+  const { id } = await context.params; // ✅ FIX HERE
 
-    if (!id) {
-      return Response.json({ error: "Missing ID" }, { status: 400 });
-    }
+  const client = await clientPromise;
+  const db = client.db(process.env.DB_NAME);
 
-    const client = await clientPromise;
-    const db = client.db(process.env.DB_NAME);
+  await db.collection("bookings").deleteOne({
+    _id: new ObjectId(id),
+  });
 
-    await db.collection("gallery").deleteOne({
-      _id: new ObjectId(id),
-    });
-
-    return Response.json({ success: true });
-  } catch (error) {
-    console.error("DELETE ERROR:", error);
-    return Response.json({ error: error.message }, { status: 500 });
-  }
+  return Response.json({ success: true });
 }
 
+// ⚠️ CANCEL
+export async function PUT(req, context) {
+  const { id } = await context.params; // ✅ FIX HERE
 
+  const client = await clientPromise;
+  const db = client.db(process.env.DB_NAME);
 
+  await db.collection("bookings").updateOne(
+    { _id: new ObjectId(id) },
+    { $set: { status: "cancelled" } }
+  );
+
+  return Response.json({ success: true });
+}
 
 
 /*import clientPromise from "@/lib/mongodb"
