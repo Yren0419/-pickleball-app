@@ -37,12 +37,10 @@ const [images, setImages] = useState([]); // 👈 from DB
           <h1 className="font-bold text-lg">D'bckyrd</h1>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-3 text-sm md:text-base">
           <a href="/book" className="bg-green-500 text-white px-4 py-2 rounded-lg">Book Now</a>
           <a href="/admin" className="bg-gray-800 text-white px-4 py-2 rounded-lg">Admin</a>
-          <a
-  href="https://facebook.com/YOUR_PAGE"
-  target="_blank"
+          <a href="https://facebook.com/YOUR_PAGE" target="_blank"
   className="bg-blue-600 text-white px-4 py-2 rounded-lg"
 >
   Follow us on Facebook
