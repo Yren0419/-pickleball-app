@@ -1,13 +1,29 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
-  const [loggingOut, setLoggingOut] = useState(false)
+   const router = useRouter()
+   const [loggingOut, setLoggingOut] = useState(false)
    const [showConfirm, setShowConfirm] = useState(false)
    const [data, setData] = useState([]);
    const [images, setImages] = useState([]);
    const [file, setFile] = useState(null);
    const [caption, setCaption] = useState("");
+
+
+     useEffect(() => {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.loggedIn) {
+          router.push("/login")
+        }
+      })
+  }, [])
+
+  return <div>Admin Dashboard 🔐</div>
+}
    
    // 📡 LOAD BOOKINGS
   const loadBookings = async () => {
@@ -242,4 +258,3 @@ const logout = async () => {
 
     </div>
   );
-}
