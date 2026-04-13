@@ -1,74 +1,70 @@
-"use client";
-import { useState, useEffect } from "react";
+"use client"
+import { useState, useEffect } from "react"
 
 export default function Book() {
+  const [date, setDate] = useState("")
+  const [start, setStart] = useState("")
+  const [end, setEnd] = useState("")
+  const [name, setName] = useState("")
+  const [contact, setContact] = useState("")
+  const [bookings, setBookings] = useState([])
 
-  const [date, setDate] = useState("");
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
-  const [name, setName] = useState("");
-  const [contact, setContact] = useState("");
-  const [bookings, setBookings] = useState([]);
+  const rate = 100
 
-  const rate = 100;
+  const today = new Date().toISOString().split("T")[0]
 
-  // 📅 DATE RULES
-  const isSunday = (date) => new Date(date).getDay() === 0;
+  const maxDate = new Date()
+  maxDate.setMonth(maxDate.getMonth() + 3)
+  const max = maxDate.toISOString().split("T")[0]
 
-  const today = new Date().toISOString().split("T")[0];
-
-  const maxDate = new Date();
-  maxDate.setMonth(maxDate.getMonth() + 3);
-  const max = maxDate.toISOString().split("T")[0];
-
-  // 📡 FETCH BOOKINGS
+  // 📡 LOAD BOOKINGS
   useEffect(() => {
     fetch("/api/book")
       .then(res => res.json())
-      .then(data => setBookings(data));
-  }, []);
+      .then(data => setBookings(data))
+  }, [])
 
-  // 💰 PRICE
+  // 💰 PRICE CALC
   const calculatePrice = () => {
-    if (!start || !end) return 0;
-    const s = parseFloat(start);
-    const e = parseFloat(end);
-    return (e - s) * rate;
-  };
+    if (!start || !end) return 0
+    return (Number(end) - Number(start)) * rate
+  }
 
-  // 🚫 CHECK IF TIME IS BOOKED
+  // 🚫 CHECK BOOKED SLOT
   const isBooked = (time) => {
     return bookings.some(b =>
       b.date === date &&
-      time >= b.start &&
-      time < b.end &&
+      Number(time) >= Number(b.start) &&
+      Number(time) < Number(b.end) &&
       b.status !== "cancelled"
-    );
-  };
+    )
+  }
 
-  // 🚫 CHECK IF DATE FULL
+  // 🚫 CHECK FULL DATE
   const isDateFullyBooked = (selectedDate) => {
     const dayBookings = bookings.filter(
       b => b.date === selectedDate && b.status !== "cancelled"
-    );
-    return dayBookings.length >= 7;
-  };
+    )
+    return dayBookings.length >= 7
+  }
 
-  // 🚀 SUBMIT
+  // 🚀 SUBMIT BOOKING
   const submit = async () => {
-
     if (!name || !contact || !date || !start || !end) {
-      alert("Please fill all fields");
-      return;
+      alert("Please fill all fields")
+      return
     }
 
-    if (parseFloat(end) <= parseFloat(start)) {
-      alert("End time must be after start time");
-      return;
+    if (Number(end) <= Number(start)) {
+      alert("End time must be after start time")
+      return
     }
 
     const res = await fetch("/api/book", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         name,
         contact,
@@ -77,42 +73,34 @@ export default function Book() {
         end,
         price: calculatePrice()
       })
-    });
+    })
 
-    const data = await res.json();
+    const data = await res.json()
 
     if (data.success) {
-      alert("Booking confirmed 🎉");
-      location.reload();
+      alert("Booking confirmed 🎉")
+      window.location.reload()
     } else {
-      alert(data.error);
+      alert(data.error || "Booking failed")
     }
-  };
+  }
 
   return (
     <div
-  className="min-h-screen bg-cover bg-center p-4 md:p-6"
-  style={{
-    backgroundImage: "url('/logo.png')"
-  }}
->
-
+      className="min-h-screen bg-cover bg-center p-4 md:p-6"
+      style={{ backgroundImage: "url('/logo.png')" }}
+    >
       <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
 
         {/* LEFT FORM */}
         <div className="bg-white p-6 rounded-2xl shadow">
-          
-<a
-    href="/"
-    className="text-green-600 font-semibold hover:underline"
-  >
-    ← Home
-  </a>
 
+          <a href="/" className="text-green-600 font-semibold hover:underline">
+            ← Home
+          </a>
 
           <h1 className="text-2xl font-bold mb-4">Book a Court</h1>
 
-          {/* NAME */}
           <input
             type="text"
             placeholder="Your Name"
@@ -120,7 +108,6 @@ export default function Book() {
             onChange={(e) => setName(e.target.value)}
           />
 
-          {/* CONTACT */}
           <input
             type="text"
             placeholder="Contact Number"
@@ -128,26 +115,25 @@ export default function Book() {
             onChange={(e) => setContact(e.target.value)}
           />
 
-          {/* DATE */}
           <input
             type="date"
             min={today}
             max={max}
             className="border p-3 w-full mb-3 rounded"
             onChange={(e) => {
-              const selected = e.target.value;
+              const selected = e.target.value
 
-              if (isSunday(selected)) {
-                alert("Closed on Sundays");
-                return;
+              if (new Date(selected).getDay() === 0) {
+                alert("Closed on Sundays")
+                return
               }
 
               if (isDateFullyBooked(selected)) {
-                alert("This date is fully booked");
-                return;
+                alert("This date is fully booked")
+                return
               }
 
-              setDate(selected);
+              setDate(selected)
             }}
           />
 
@@ -159,13 +145,9 @@ export default function Book() {
               onChange={(e) => setStart(e.target.value)}
             >
               <option value="">Start</option>
-              {[7,8,9,16,17,18,19].map(t => (
-                <option
-                  key={t}
-                  value={t}
-                  disabled={isBooked(t)}
-                >
-                  {t < 12 ? `${t}:00 AM` : `${t-12}:00 PM`}
+              {[7, 8, 9, 16, 17, 18, 19].map(t => (
+                <option key={t} value={t} disabled={isBooked(t)}>
+                  {t < 12 ? `${t}:00 AM` : `${t - 12}:00 PM`}
                 </option>
               ))}
             </select>
@@ -175,27 +157,21 @@ export default function Book() {
               onChange={(e) => setEnd(e.target.value)}
             >
               <option value="">End</option>
-              {[8,9,10,17,18,19,20].map(t => (
-                <option
-                  key={t}
-                  value={t}
-                  disabled={isBooked(t)}
-                >
-                  {t < 12 ? `${t}:00 AM` : `${t-12}:00 PM`}
+              {[8, 9, 10, 17, 18, 19, 20].map(t => (
+                <option key={t} value={t} disabled={isBooked(t)}>
+                  {t < 12 ? `${t}:00 AM` : `${t - 12}:00 PM`}
                 </option>
               ))}
             </select>
 
           </div>
 
-          {/* SUBMIT */}
           <button
             onClick={submit}
-            className="bg-green-500 text-white py-3 rounded-lg w-full md:w-auto px-6"
+            className="bg-green-500 text-white py-3 rounded-lg w-full"
           >
             Confirm Booking
           </button>
-          
 
         </div>
 
@@ -204,20 +180,19 @@ export default function Book() {
 
           <h2 className="text-xl font-bold mb-4">Booking Summary</h2>
 
-          <p className="text-gray-600">Court: Court 1</p>
-          <p className="text-gray-600">Date: {date || "-"}</p>
-
-          <p className="text-gray-600">
+          <p>Court: Court 1</p>
+          <p>Date: {date || "-"}</p>
+          <p>
             Time: {start && end ? `${start}:00 - ${end}:00` : "-"}
           </p>
 
           <hr className="my-4" />
 
-          <p className="text-lg font-semibold">
+          <p className="text-lg font-bold">
             Total: ₱{calculatePrice()}
           </p>
 
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-sm text-gray-500">
             ₱100 per hour
           </p>
 
@@ -225,5 +200,5 @@ export default function Book() {
 
       </div>
     </div>
-  );
+  )
 }
