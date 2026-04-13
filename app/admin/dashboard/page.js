@@ -6,6 +6,7 @@ export default function Dashboard() {
   const [data, setData] = useState([]);
   const [file, setFile] = useState(null);
   const [caption, setCaption] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // 🔐 PROTECT PAGE
   useEffect(() => {
@@ -45,36 +46,29 @@ export default function Dashboard() {
   const uploadImage = async () => {
   if (!file) return alert("Select image");
 
-  const formData = new FormData();
-  formData.append("file", file);
+  setLoading(true);
 
   try {
-    const uploadRes = await fetch("/api/upload", {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/upload", {
       method: "POST",
       body: formData,
     });
 
-    const uploadData = await uploadRes.json();
+    const data = await res.json();
 
-    console.log("UPLOAD RESPONSE:", uploadData); // 👈 IMPORTANT DEBUG
-
-    if (!uploadRes.ok) {
-      alert(uploadData.error || "Upload failed");
-      return;
-    }
-
-    if (!uploadData.imageUrl) {
-      alert("No image URL returned");
+    if (!res.ok) {
+      alert(data.error || "Upload failed");
       return;
     }
 
     await fetch("/api/gallery", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        imageUrl: uploadData.imageUrl,
+        imageUrl: data.imageUrl,
         caption,
       }),
     });
@@ -82,11 +76,12 @@ export default function Dashboard() {
     alert("Uploaded!");
     setFile(null);
     setCaption("");
+    loadImages();
 
-    loadImages(); // 🔄 refresh gallery
   } catch (err) {
-    console.error("UPLOAD ERROR:", err);
-    alert("Something went wrong");
+    alert("Upload error");
+  } finally {
+    setLoading(false);
   }
 };
    
@@ -146,9 +141,9 @@ export default function Dashboard() {
         <h2 className="font-bold mb-2">Upload Image</h2>
 
         <input
-          type="file"
-          onChange={(e) => setFile(e.target.files[0])}
-          className="mb-2"
+           type="file"
+            onChange={(e) => setFile(e.target.files[0])}
+            className="mb-2"
         />
 
         <input
@@ -159,11 +154,12 @@ export default function Dashboard() {
         />
 
         <button
-          onClick={uploadImage}
-          className="bg-green-500 text-white px-4 py-2 rounded"
-        >
-          Upload
-        </button>
+  onClick={uploadImage}
+  disabled={loading}
+  className="bg-green-500 text-white px-4 py-2 rounded"
+>
+  {loading ? "Uploading..." : "Upload"}
+</button>
       </div>
 
       {/* GALLERY LIST */}
