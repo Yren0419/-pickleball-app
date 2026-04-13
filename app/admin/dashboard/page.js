@@ -42,13 +42,13 @@ export default function Dashboard() {
     loadBookings();
   };
 
-  // 📸 UPLOAD
   const uploadImage = async () => {
-    if (!file) return alert("Select image");
+  if (!file) return alert("Select image");
 
-    const formData = new FormData();
-    formData.append("file", file);
+  const formData = new FormData();
+  formData.append("file", file);
 
+  try {
     const uploadRes = await fetch("/api/upload", {
       method: "POST",
       body: formData,
@@ -56,7 +56,17 @@ export default function Dashboard() {
 
     const uploadData = await uploadRes.json();
 
-    if (!uploadData.imageUrl) return alert("Upload failed");
+    console.log("UPLOAD RESPONSE:", uploadData); // 👈 IMPORTANT DEBUG
+
+    if (!uploadRes.ok) {
+      alert(uploadData.error || "Upload failed");
+      return;
+    }
+
+    if (!uploadData.imageUrl) {
+      alert("No image URL returned");
+      return;
+    }
 
     await fetch("/api/gallery", {
       method: "POST",
@@ -72,7 +82,13 @@ export default function Dashboard() {
     alert("Uploaded!");
     setFile(null);
     setCaption("");
-  };
+
+    loadImages(); // 🔄 refresh gallery
+  } catch (err) {
+    console.error("UPLOAD ERROR:", err);
+    alert("Something went wrong");
+  }
+};
    
     // 📡 LOAD IMAGES
   const loadImages = () => {
