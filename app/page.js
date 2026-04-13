@@ -30,23 +30,43 @@ const [images, setImages] = useState([]); // 👈 from DB
     <div className="min-h-screen bg-gradient-to-br from-green-900 to-black p-4 md:p-6">
 
 
-       {/* NAVBAR */}
-      <div className="flex justify-between items-center p-6 bg-white shadow">
-        <div className="flex items-center gap-3">
-          <img src="/logo.png" className="w-10" />
-          <h1 className="font-bold text-lg">D'bckyrd</h1>
-        </div>
+{/* NAVBAR */}
+<div className="flex flex-col md:flex-row md:justify-between md:items-center p-4 md:p-6 bg-white shadow gap-4">
 
-        <div className="flex gap-3 text-sm md:text-base">
-          <a href="/book" className="bg-green-500 text-white px-4 py-2 rounded-lg">Book Now</a>
-          <a href="/admin" className="bg-gray-800 text-white px-4 py-2 rounded-lg">Admin</a>
-          <a href="https://facebook.com/YOUR_PAGE" target="_blank"
-  className="bg-blue-600 text-white px-4 py-2 rounded-lg"
->
-  Follow us on Facebook
-</a>
-    </div>
-      </div>
+  {/* Logo */}
+  <div className="flex items-center gap-3 justify-center md:justify-start">
+    <img src="/logo.png" className="w-10" alt="Logo" />
+    <h1 className="font-bold text-lg">D'bckyrd</h1>
+  </div>
+
+  {/* Links */}
+  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 text-sm md:text-base w-full md:w-auto">
+
+    <a
+      href="/book"
+      className="bg-green-500 text-white px-4 py-2 rounded-lg text-center"
+    >
+      Book Now
+    </a>
+
+    <a
+      href="/admin"
+      className="bg-gray-800 text-white px-4 py-2 rounded-lg text-center"
+    >
+      Admin
+    </a>
+
+    <a
+      href="https://facebook.com/YOUR_PAGE"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="bg-blue-600 text-white px-4 py-2 rounded-lg text-center"
+    >
+      Follow us on Facebook
+    </a>
+
+  </div>
+</div>
       {/* HERO */}
       <div className="text-center py-16 px-6">
         <h1 className="text-lime-200  text-4xl font-bold mb-4">
