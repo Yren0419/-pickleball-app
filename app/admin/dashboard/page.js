@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 
 export default function Dashboard() {
+   const [images, setImages] = useState([]);
   const [data, setData] = useState([]);
   const [file, setFile] = useState(null);
   const [caption, setCaption] = useState("");
@@ -72,6 +73,30 @@ export default function Dashboard() {
     setFile(null);
     setCaption("");
   };
+   
+    // 📡 LOAD IMAGES
+  const loadImages = () => {
+    fetch("/api/gallery")
+      .then(res => res.json())
+      .then(setImages);
+  };
+
+  useEffect(() => {
+    loadImages();
+  }, []);
+
+
+   // ❌ DELETE IMAGE
+  const deleteImage = async (id) => {
+    const confirmDelete = confirm("Delete this image?");
+    if (!confirmDelete) return;
+
+    await fetch(`/api/gallery/${id}`, {
+      method: "DELETE",
+    });
+
+    loadImages(); // 🔄 refresh
+  };
 
   // 🚪 LOGOUT
   const logout = async () => {
@@ -124,6 +149,30 @@ export default function Dashboard() {
           Upload
         </button>
       </div>
+
+      {/* GALLERY LIST */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {images.map((img) => (
+          <div key={img._id} className="bg-white p-2 rounded-xl shadow">
+
+            <img
+              src={img.imageUrl}
+              className="w-full h-40 object-cover rounded"
+            />
+
+            <p className="text-sm mt-2">{img.caption}</p>
+
+            <button
+              onClick={() => deleteImage(img._id)}
+              className="bg-red-500 text-white w-full mt-2 py-1 rounded"
+            >
+              Delete
+            </button>
+
+          </div>
+        ))}
+      </div>
+        
 
       {/* BOOKINGS */}
       <div className="bg-white p-4 rounded-xl shadow">
