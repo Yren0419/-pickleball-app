@@ -14,7 +14,6 @@ export async function GET(req) {
       loggedIn: true,
       user
     })
-
   } catch (err) {
     return Response.json({ loggedIn: false })
   }
