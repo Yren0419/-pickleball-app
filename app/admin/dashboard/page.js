@@ -20,9 +20,7 @@ export default function Dashboard() {
           router.push("/login")
         }
       })
-  }, [])
-
-  return <div>Admin Dashboard 🔐</div>
+  }, [router])
 }
    
    // 📡 LOAD BOOKINGS
