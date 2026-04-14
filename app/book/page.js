@@ -8,6 +8,7 @@ export default function Book() {
   const [name, setName] = useState("")
   const [contact, setContact] = useState("")
   const [bookings, setBookings] = useState([])
+  const [agreed, setAgreed] = useState(false)
 
   const rate = 100
 
@@ -18,10 +19,14 @@ export default function Book() {
   const max = maxDate.toISOString().split("T")[0]
 
   // 📡 LOAD BOOKINGS
-  useEffect(() => {
+  const loadBookings = () => {
     fetch("/api/book")
       .then(res => res.json())
       .then(data => setBookings(data))
+  }
+
+  useEffect(() => {
+    loadBookings()
   }, [])
 
   // 💰 PRICE CALC
@@ -49,9 +54,14 @@ export default function Book() {
   }
 
   // 🚀 SUBMIT BOOKING
-  const submit = async () => {
+  const handleBooking = async () => {
     if (!name || !contact || !date || !start || !end) {
       alert("Please fill all fields")
+      return
+    }
+
+    if (!agreed) {
+      alert("Please agree to the cancellation policy")
       return
     }
 
@@ -63,7 +73,7 @@ export default function Book() {
     const res = await fetch("/api/book", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         name,
@@ -71,18 +81,29 @@ export default function Book() {
         date,
         start,
         end,
-        price: calculatePrice()
-      })
+        price: calculatePrice(),
+      }),
     })
 
     const data = await res.json()
 
-    if (data.success) {
-      alert("Booking confirmed 🎉")
-      window.location.reload()
-    } else {
+    if (!res.ok) {
       alert(data.error || "Booking failed")
+      return
     }
+
+    alert("Booking confirmed 🎉")
+
+    // ✅ RESET FORM (THIS FIXES YOUR ISSUE)
+    setName("")
+    setContact("")
+    setDate("")
+    setStart("")
+    setEnd("")
+    setAgreed(false)
+
+    // ✅ REFRESH BOOKINGS (NO PAGE RELOAD)
+    loadBookings()
   }
 
   return (
@@ -91,7 +112,7 @@ export default function Book() {
       style={{ backgroundImage: "url('/logo.png')" }}
     >
       <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
-
+          
         {/* LEFT FORM */}
         <div className="bg-white p-6 rounded-2xl shadow">
 
@@ -99,24 +120,32 @@ export default function Book() {
             ← Home
           </a>
 
-          <h1 className="text-2xl font-bold mb-4">Book a Court</h1>
+          <p className="text-sm text-red-500 mb-3">
+            ⚠️ Please cancel at least 3 hours before your schedule. 
+            Repeated no-shows may result in booking restrictions.
+          </p>
+
+          <h1 className="text-xl font-bold mb-4">Book a Schedule</h1>
 
           <input
             type="text"
             placeholder="Your Name"
-            className="border p-3 w-full mb-3 rounded"
+            value={name}
             onChange={(e) => setName(e.target.value)}
+            className="border p-3 w-full mb-3 rounded"
           />
 
           <input
             type="text"
             placeholder="Contact Number"
-            className="border p-3 w-full mb-3 rounded"
+            value={contact}
             onChange={(e) => setContact(e.target.value)}
+            className="border p-3 w-full mb-3 rounded"
           />
 
           <input
             type="date"
+            value={date}
             min={today}
             max={max}
             className="border p-3 w-full mb-3 rounded"
@@ -141,8 +170,9 @@ export default function Book() {
           <div className="grid grid-cols-2 gap-2 mb-3">
 
             <select
-              className="border p-3 w-full rounded"
+              value={start}
               onChange={(e) => setStart(e.target.value)}
+              className="border p-3 w-full rounded"
             >
               <option value="">Start</option>
               {[7, 8, 9, 16, 17, 18, 19].map(t => (
@@ -153,8 +183,9 @@ export default function Book() {
             </select>
 
             <select
-              className="border p-3 w-full rounded"
+              value={end}
               onChange={(e) => setEnd(e.target.value)}
+              className="border p-3 w-full rounded"
             >
               <option value="">End</option>
               {[8, 9, 10, 17, 18, 19, 20].map(t => (
@@ -166,11 +197,21 @@ export default function Book() {
 
           </div>
 
+          {/* CHECKBOX */}
+          <label className="flex items-center gap-2 text-sm mb-3">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+            />
+            I understand the cancellation policy
+          </label>
+
           <button
-            onClick={submit}
+            onClick={handleBooking}
             className="bg-green-500 text-white py-3 rounded-lg w-full"
           >
-            Confirm Booking
+            Book Now
           </button>
 
         </div>

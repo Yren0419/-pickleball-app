@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 
 export default function Dashboard() {
-   const [images, setImages] = useState([]);
+  const [images, setImages] = useState([]);
   const [data, setData] = useState([]);
   const [file, setFile] = useState(null);
   const [caption, setCaption] = useState("");
@@ -11,16 +11,18 @@ export default function Dashboard() {
   // 🔐 PROTECT PAGE
   useEffect(() => {
     fetch("/api/auth/me")
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (!data.loggedIn) {
           window.location.replace("/admin");
         }
       });
 
     loadBookings();
+    loadImages();
   }, []);
 
+  // 📡 LOAD BOOKINGS
   const loadBookings = async () => {
     const res = await fetch("/api/book");
     const result = await res.json();
@@ -35,83 +37,99 @@ export default function Dashboard() {
     loadBookings();
   };
 
-  // ⚠️ CANCEL BOOKING
+  // ⚠️ CANCEL BOOKING (FIXED)
   const cancelBooking = async (id) => {
     if (!confirm("Cancel booking?")) return;
 
-    await fetch(`/api/book/${id}`, { method: "PUT" });
+    await fetch(`/api/book/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status: "cancelled" }),
+    });
+
     loadBookings();
   };
 
+  // 🚫 NO SHOW (NEW)
+  const markNoShow = async (id) => {
+    if (!confirm("Mark as no-show?")) return;
+
+    await fetch(`/api/book/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status: "no-show" }),
+    });
+
+    loadBookings();
+  };
+
+  // 📸 UPLOAD IMAGE
   const uploadImage = async () => {
-  if (!file) return alert("Select image");
+    if (!file) return alert("Select image");
 
-  setLoading(true);
+    setLoading(true);
 
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
 
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      alert(data.error || "Upload failed");
-      return;
+      if (!res.ok) {
+        alert(data.error || "Upload failed");
+        return;
+      }
+
+      await fetch("/api/gallery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageUrl: data.imageUrl,
+          caption,
+        }),
+      });
+
+      alert("Uploaded!");
+      setFile(null);
+      setCaption("");
+      loadImages();
+    } catch (err) {
+      alert("Upload error");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    await fetch("/api/gallery", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        imageUrl: data.imageUrl,
-        caption,
-      }),
-    });
-
-    alert("Uploaded!");
-    setFile(null);
-    setCaption("");
-    loadImages();
-
-  } catch (err) {
-    alert("Upload error");
-  } finally {
-    setLoading(false);
-  }
-};
-   
-    // 📡 LOAD IMAGES
+  // 📡 LOAD IMAGES
   const loadImages = () => {
     fetch("/api/gallery")
-      .then(res => res.json())
+      .then((res) => res.json())
       .then(setImages);
   };
 
-  useEffect(() => {
-    loadImages();
-  }, []);
-
-
-   // ❌ DELETE IMAGE
+  // ❌ DELETE IMAGE
   const deleteImage = async (id) => {
-    const confirmDelete = confirm("Delete this image?");
-    if (!confirmDelete) return;
+    if (!confirm("Delete this image?")) return;
 
     await fetch(`/api/gallery/${id}`, {
       method: "DELETE",
     });
 
-    loadImages(); // 🔄 refresh
+    loadImages();
   };
 
   // 🚪 LOGOUT
   const logout = async () => {
-    await fetch("/api/logout"); // 👈 important
+    await fetch("/api/logout");
     window.location.replace("/admin");
   };
 
@@ -141,9 +159,10 @@ export default function Dashboard() {
         <h2 className="font-bold mb-2">Upload Image</h2>
 
         <input
-           type="file"
-            onChange={(e) => setFile(e.target.files[0])}
-            className="mb-2"
+          type="file"
+          accept="image/*" // ✅ mobile fix
+          onChange={(e) => setFile(e.target.files[0])}
+          className="mb-2"
         />
 
         <input
@@ -154,24 +173,22 @@ export default function Dashboard() {
         />
 
         <button
-  onClick={uploadImage}
-  disabled={loading}
-  className="bg-green-500 text-white px-4 py-2 rounded"
->
-  {loading ? "Uploading..." : "Upload"}
-</button>
+          onClick={uploadImage}
+          disabled={loading}
+          className="bg-green-500 text-white px-4 py-2 rounded"
+        >
+          {loading ? "Uploading..." : "Upload"}
+        </button>
       </div>
 
-      {/* GALLERY LIST */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {/* GALLERY */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         {images.map((img) => (
           <div key={img._id} className="bg-white p-2 rounded-xl shadow">
-
             <img
               src={img.imageUrl}
               className="w-full h-40 object-cover rounded"
             />
-
             <p className="text-sm mt-2">{img.caption}</p>
 
             <button
@@ -180,11 +197,9 @@ export default function Dashboard() {
             >
               Delete
             </button>
-
           </div>
         ))}
       </div>
-        
 
       {/* BOOKINGS */}
       <div className="bg-white p-4 rounded-xl shadow">
@@ -199,12 +214,24 @@ export default function Dashboard() {
               <p>{b.date}</p>
               <p>{b.start}:00 - {b.end}:00</p>
 
+              {/* OPTIONAL STATUS DISPLAY */}
+              <p className="text-sm mt-1">
+                Status: {b.status || "active"}
+              </p>
+
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => cancelBooking(b._id)}
                   className="bg-yellow-500 text-white px-3 py-1 rounded"
                 >
                   Cancel
+                </button>
+
+                <button
+                  onClick={() => markNoShow(b._id)}
+                  className="bg-gray-500 text-white px-3 py-1 rounded"
+                >
+                  No Show
                 </button>
 
                 <button
@@ -218,7 +245,6 @@ export default function Dashboard() {
           ))
         )}
       </div>
-
     </div>
   );
 }

@@ -39,6 +39,7 @@ export async function POST(req) {
     price: data.price,
     court: "Court 1",
     status: "confirmed",
+    status: "active",
     createdAt: new Date()
   });
 

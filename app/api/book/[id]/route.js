@@ -3,7 +3,7 @@ import { ObjectId } from "mongodb";
 
 // ❌ DELETE
 export async function DELETE(req, context) {
-  const { id } = await context.params; // ✅ FIX HERE
+  const { id } = await context.params; // ✅ FIX
 
   const client = await clientPromise;
   const db = client.db(process.env.DB_NAME);
@@ -15,22 +15,34 @@ export async function DELETE(req, context) {
   return Response.json({ success: true });
 }
 
-// ⚠️ CANCEL
+// ✏️ UPDATE (cancel / no-show)
 export async function PUT(req, context) {
-  const { id } = await context.params; // ✅ FIX HERE
+  const { id } = await context.params; // ✅ FIX
 
   const client = await clientPromise;
   const db = client.db(process.env.DB_NAME);
+  const collection = db.collection("bookings");
 
-  await db.collection("bookings").updateOne(
+  let body = {};
+
+  try {
+    body = await req.json(); // ✅ safe parse
+  } catch {
+    body = {}; // 👈 prevents crash if no body
+  }
+
+  // ✅ default fallback (for old cancel button)
+  if (!body.status) {
+    body.status = "cancelled";
+  }
+
+  await collection.updateOne(
     { _id: new ObjectId(id) },
-    { $set: { status: "cancelled" } }
+    { $set: body }
   );
 
   return Response.json({ success: true });
 }
-
-
 /*import clientPromise from "@/lib/mongodb"
 import { ObjectId } from "mongodb"
 
