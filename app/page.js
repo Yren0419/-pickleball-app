@@ -85,16 +85,65 @@ const [images, setImages] = useState([]); // 👈 from DB
       </div>
 
       {/* ANNOUNCEMENTS */}
-      <div className="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow mb-10">
-        <h2 className="text-xl text-black font-bold mb-4">📢 Announcements</h2>
+<div className="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow mb-10">
+  <h2 className="text-xl text-black font-bold mb-4">📢 Announcements</h2>
 
-        <ul className="space-y-2 text-gray-700">
-          <li>✔ Open Monday - Saturday</li>
-          <li>✔ Morning: 7AM - 10AM</li>
-          <li>✔ Evening: 4PM - 8PM</li>
-          <li>✔ Rate: ₱100 per hour</li>
-        </ul>
-      </div>
+  <ul className="space-y-2 text-gray-700">
+    <li>✔ Open Monday - Saturday</li>
+    <li>✔ Morning: 7AM - 10AM</li>
+    <li>✔ Evening: 4PM - 8PM</li>
+    <li>✔ Rate: ₱100 per hour</li>
+  </ul>
+</div>
+
+{/* LOCATION */}
+<div className="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow mb-10">
+  <h2 className="text-xl text-black font-bold mb-4">📍 Location</h2>
+
+  <p className="text-gray-700 mb-1">
+    044 Mabini Street, Mangatarem, Pangasinan, Philippines
+  </p>
+
+  <p className="text-gray-500 text-sm mb-3">
+    Visit us or book your schedule in advance
+  </p>
+
+  {/* BUTTONS */}
+  <div className="flex flex-col md:flex-row gap-3 mb-5">
+    
+    {/* Open in Google Maps */}
+    <a
+      href="https://www.google.com/maps/search/?api=1&query=044+Mabini+Street+Mangatarem+Pangasinan"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="bg-blue-600 text-white px-4 py-2 rounded-lg text-center hover:bg-blue-700 transition"
+    >
+      Open in Google Maps
+    </a>
+
+    {/* Start Navigation */}
+    <a
+      href="https://www.google.com/maps/dir/?api=1&destination=044+Mabini+Street+Mangatarem+Pangasinan"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="bg-green-600 text-white px-4 py-2 rounded-lg text-center hover:bg-green-700 transition"
+    >
+      Start Navigation
+    </a>
+  </div>
+
+  {/* MAP PREVIEW */}
+  <div className="rounded-xl overflow-hidden border">
+    <iframe
+      title="Location Map"
+      src="https://www.google.com/maps?q=044+Mabini+Street+Mangatarem+Pangasinan&output=embed"
+      width="100%"
+      height="250"
+      loading="lazy"
+      className="w-full"
+    ></iframe>
+  </div>
+</div>
 
      {/* GALLERY */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
