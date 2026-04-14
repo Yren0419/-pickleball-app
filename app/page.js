@@ -86,7 +86,7 @@ const [images, setImages] = useState([]); // 👈 from DB
 
       {/* ANNOUNCEMENTS */}
       <div className="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow mb-10">
-        <h2 className="text-xl font-bold mb-4">📢 Announcements</h2>
+        <h2 className="text-xl text-black font-bold mb-4">📢 Announcements</h2>
 
         <ul className="space-y-2 text-gray-700">
           <li>✔ Open Monday - Saturday</li>

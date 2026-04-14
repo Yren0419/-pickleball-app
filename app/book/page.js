@@ -217,9 +217,9 @@ export default function Book() {
         </div>
 
         {/* RIGHT SUMMARY */}
-        <div className="bg-white p-6 rounded-2xl shadow h-fit sticky top-6">
+        <div className="bg-white text-black p-6 rounded-2xl shadow h-fit sticky top-6">
 
-          <h2 className="text-black text-xl font-bold mb-4">Booking Summary</h2>
+          <h2 className=" text-xl font-bold mb-4">Booking Summary</h2>
           <p>D'bckyrd</p>
           <p>Date: {date || "-"}</p>
           <p>
