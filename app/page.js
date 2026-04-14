@@ -26,6 +26,12 @@ const [images, setImages] = useState([]); // 👈 from DB
     setIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
+  const today = new Date().toLocaleDateString("en-PH", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+
  return (
     <div className="min-h-screen bg-gradient-to-br from-green-900 to-black p-4 md:p-6">
 
@@ -211,11 +217,14 @@ const [images, setImages] = useState([]); // 👈 from DB
 
       {/* FLOATING BOOK NOW BUTTON */}
 <a
-  href="/book"
-  className="fixed bottom-5 right-5 bg-green-500 text-white px-5 py-3 rounded-full shadow-lg hover:bg-red-700 transition z-50"
->
-  📅 Book Now
-</a>
+        href="/book"
+        className="fixed bottom-5 right-5 bg-green-500 text-white px-5 py-3 rounded-full shadow-lg hover:bg-red-700 transition z-50"
+      >
+        📅 Book Now{" "}
+        <span className="hidden sm:inline">
+          ({today})
+        </span>
+      </a>
 
       
     </div>
