@@ -19,12 +19,12 @@ export default function Home() {
       });
   }, []);
 
-  // 📅 DATE
+  /*// 📅 DATE
   const today = new Date().toLocaleDateString("en-PH", {
     year: "numeric",
     month: "short",
     day: "numeric",
-  });
+  });*/
 
   // 🔄 RESET ZOOM WHEN IMAGE CHANGES
   useEffect(() => {
@@ -238,7 +238,7 @@ export default function Home() {
         href="/book"
         className="fixed bottom-5 right-5 bg-green-500 text-white px-5 py-3 rounded-full shadow-lg"
       >
-        📅 Book Now ({today})
+         Book Now
       </a>
 
       {/* FOOTER */}
