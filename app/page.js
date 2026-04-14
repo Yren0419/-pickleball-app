@@ -57,7 +57,7 @@ const [images, setImages] = useState([]); // 👈 from DB
     </a>
 
     <a
-      href="https://facebook.com/YOUR_PAGE"
+      href="https://facebook.com/share/1RpaNtPa9A"
       target="_blank"
       rel="noopener noreferrer"
       className="bg-blue-600 text-white px-4 py-2 rounded-lg text-center"
