@@ -125,7 +125,7 @@ export default function Book() {
             Repeated no-shows may result in booking restrictions.
           </p>
 
-          <h1 className="text-xl font-bold mb-4">Book a Schedule</h1>
+          <h1 className="text-xl text-black font-bold mb-4">Book a Schedule</h1>
 
           <input
             type="text"
@@ -198,7 +198,7 @@ export default function Book() {
           </div>
 
           {/* CHECKBOX */}
-          <label className="flex items-center gap-2 text-sm mb-3">
+          <label className="text-black placeholder-gray-500 flex items-center gap-2 text-sm mb-3">
             <input
               type="checkbox"
               checked={agreed}
@@ -219,9 +219,8 @@ export default function Book() {
         {/* RIGHT SUMMARY */}
         <div className="bg-white p-6 rounded-2xl shadow h-fit sticky top-6">
 
-          <h2 className="text-xl font-bold mb-4">Booking Summary</h2>
-
-          <p>Court: Court 1</p>
+          <h2 className="text-black text-xl font-bold mb-4">Booking Summary</h2>
+          <p>D'bckyrd</p>
           <p>Date: {date || "-"}</p>
           <p>
             Time: {start && end ? `${start}:00 - ${end}:00` : "-"}
@@ -229,11 +228,11 @@ export default function Book() {
 
           <hr className="my-4" />
 
-          <p className="text-lg font-bold">
+          <p className="text-lg text-black font-bold">
             Total: ₱{calculatePrice()}
           </p>
 
-          <p className="text-sm text-gray-500">
+          <p className="text-black text-sm text-gray-500">
             ₱100 per hour
           </p>
 
