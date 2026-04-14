@@ -82,10 +82,12 @@ const [images, setImages] = useState([]); // 👈 from DB
         >
           Book Now
         </a>
+
+        
       </div>
 
       {/* ANNOUNCEMENTS */}
-<div className="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow mb-10">
+<div className="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow mb-10 transition transform hover:scale-[1.01] hover:shadow-lg">
   <h2 className="text-xl text-black font-bold mb-4">📢 Announcements</h2>
 
   <ul className="space-y-2 text-gray-700">
@@ -97,7 +99,7 @@ const [images, setImages] = useState([]); // 👈 from DB
 </div>
 
 {/* LOCATION */}
-<div className="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow mb-10">
+<div className="max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow mb-10 transition transform hover:scale-[1.01] hover:shadow-lg">
   <h2 className="text-xl text-black font-bold mb-4">📍 Location</h2>
 
   <p className="text-gray-700 mb-1">
@@ -198,14 +200,22 @@ const [images, setImages] = useState([]); // 👈 from DB
           >
             ›
           </button>
-
         </div>
+        
       )}
-
+       
       {/* FOOTER */}
       <div className="text-center text-sm text-gray-600 pb-6">
         © 2026 D'bckyrd Pickleball Court
       </div>
+
+      {/* FLOATING BOOK NOW BUTTON */}
+<a
+  href="/book"
+  className="fixed bottom-5 right-5 bg-green-500 text-white px-5 py-3 rounded-full shadow-lg hover:bg-red-700 transition z-50"
+>
+  📅 Book Now
+</a>
 
       
     </div>
