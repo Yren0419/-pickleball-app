@@ -132,7 +132,7 @@ export default function Book() {
             placeholder="Your Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="border p-3 w-full mb-3 rounded"
+            className="border p-3 w-full rounded border p-2 w-full mb-2 text-black placeholder-gray-500"
           />
 
           <input
@@ -140,7 +140,7 @@ export default function Book() {
             placeholder="Contact Number"
             value={contact}
             onChange={(e) => setContact(e.target.value)}
-            className="border p-3 w-full mb-3 rounded"
+            className="border p-3 w-full rounded border p-2 w-full mb-2 text-black placeholder-gray-500"
           />
 
           <input
@@ -148,7 +148,7 @@ export default function Book() {
             value={date}
             min={today}
             max={max}
-            className="border p-3 w-full mb-3 rounded"
+            className="border p-3 w-full rounded border p-2 w-full mb-2 text-black placeholder-gray-500"
             onChange={(e) => {
               const selected = e.target.value
 
@@ -172,7 +172,7 @@ export default function Book() {
             <select
               value={start}
               onChange={(e) => setStart(e.target.value)}
-              className="border p-3 w-full rounded"
+              className="border p-3 w-full rounded border p-2 w-full mb-2 text-black placeholder-gray-500"
             >
               <option value="">Start</option>
               {[7, 8, 9, 16, 17, 18, 19].map(t => (
@@ -185,7 +185,7 @@ export default function Book() {
             <select
               value={end}
               onChange={(e) => setEnd(e.target.value)}
-              className="border p-3 w-full rounded"
+              className="border p-3 w-full rounded border p-2 w-full mb-2 text-black placeholder-gray-500"
             >
               <option value="">End</option>
               {[8, 9, 10, 17, 18, 19, 20].map(t => (
