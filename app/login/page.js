@@ -27,7 +27,7 @@ const login = async () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-500 via-emerald-900 to-black">
 
 
-      <div className="text-black placeholder-gray-500 flex items-center gap-2 text-sm mb-3">
+      <div className="bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-xl w-80">
 
         <h1 className="text-black text-2xl font-bold text-center mb-6 text-green-600">
           Admin Login
