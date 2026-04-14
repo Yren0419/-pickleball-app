@@ -155,7 +155,7 @@ export default function Dashboard() {
       </div>
 
       {/* UPLOAD */}
-      <div className="bg-white p-4 rounded-xl shadow mb-6">
+      <div className="p-4 md:p-6 bg-gray-100 text-gray-900">
         <h2 className="font-bold mb-2">Upload Image</h2>
 
         <input
@@ -182,14 +182,14 @@ export default function Dashboard() {
       </div>
 
       {/* GALLERY */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+      <div className="bg-white p-4 rounded-xl shadow text-gray-900">
         {images.map((img) => (
           <div key={img._id} className="bg-white p-2 rounded-xl shadow">
             <img
               src={img.imageUrl}
               className="w-full h-40 object-cover rounded"
             />
-            <p className="text-sm mt-2">{img.caption}</p>
+            <p className="text-sm mt-1 text-gray-900 font-medium">{img.caption}</p>
 
             <button
               onClick={() => deleteImage(img._id)}
