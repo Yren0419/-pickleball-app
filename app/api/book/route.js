@@ -1,214 +1,78 @@
-
+// app/api/book/route.js
 
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-// ✅ CREATE BOOKING
-export async function POST(req) {
-  const data = await req.json();
-
-  if (!data.name || !data.date || !data.start || !data.end) {
-    return Response.json({ error: "Missing fields" }, { status: 400 });
-  }
-
-  const client = await clientPromise;
-  const db = client.db(process.env.DB_NAME);
-
-  // 🚫 Prevent overlap
-  const existing = await db.collection("bookings").findOne({
-    date: data.date,
-    court: "Court 1",
-    $or: [
-      { start: { $lt: data.end }, end: { $gt: data.start } }
-    ]
-  });
-
-  if (existing) {
-    return Response.json(
-      { error: "Time slot already booked" },
-      { status: 400 }
-    );
-  }
-
-  await db.collection("bookings").insertOne({
-    name: data.name,
-    contact: data.contact,
-    date: data.date,
-    start: data.start,
-    end: data.end,
-    price: data.price,
-    court: "Court 1",
-    status: "confirmed",
-    status: "active",
-    createdAt: new Date()
-  });
-
-  return Response.json({ success: true });
+// convert hour safely
+function toHour(value) {
+  return Number(String(value).split(":")[0]);
 }
-
-// ✅ GET BOOKINGS (WITH FILTER)
-export async function GET(req) {
-  const client = await clientPromise;
-  const db = client.db(process.env.DB_NAME);
-
-  const { searchParams } = new URL(req.url);
-  const date = searchParams.get("date");
-
-  let query = {};
-  if (date) query.date = date;
-
-  const bookings = await db
-    .collection("bookings")
-    .find(query)
-    .sort({ start: 1 })
-    .toArray();
-
-  return Response.json(bookings);
-}
-
-// ❌ DELETE BOOKING
-export async function DELETE(req) {
-  const { id } = await req.json();
-
-  const client = await clientPromise;
-  const db = client.db(process.env.DB_NAME);
-
-  await db.collection("bookings").deleteOne({
-    _id: new ObjectId(id)
-  });
-
-  return Response.json({ success: true });
-}
-
-
-
-/*import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
 
 // ✅ CREATE BOOKING
 export async function POST(req) {
-  const data = await req.json();
+  try {
+    const data = await req.json();
 
-  if (!data.name || !data.date || !data.start || !data.end) {
-    return Response.json({ error: "Missing fields" }, { status: 400 });
-  }
-
-  const client = await clientPromise;
-  const db = client.db(process.env.DB_NAME);
-
-  // 🚫 Prevent overlap
-  const existing = await db.collection("bookings").findOne({
-    date: data.date,
-    court: "Court 1",
-    $or: [
-      { start: { $lt: data.end }, end: { $gt: data.start } }
-    ]
-  });
-
-  if (existing) {
-    return Response.json(
-      { error: "Time slot already booked" },
-      { status: 400 }
-    );
-  }
-
-  await db.collection("bookings").insertOne({
-    name: data.name,
-    contact: data.contact,
-    date: data.date,
-    start: data.start,
-    end: data.end,
-    price: data.price,
-    court: "Court 1",
-    status: "confirmed",
-    createdAt: new Date()
-  });
-
-  return Response.json({ success: true });
-}
-
-// ✅ GET BOOKINGS (WITH FILTER)
-export async function GET(req) {
-  const client = await clientPromise;
-  const db = client.db(process.env.DB_NAME);
-
-  const { searchParams } = new URL(req.url);
-  const date = searchParams.get("date");
-
-  let query = {};
-  if (date) query.date = date;
-
-  const bookings = await db
-    .collection("bookings")
-    .find(query)
-    .sort({ start: 1 })
-    .toArray();
-
-  return Response.json(bookings);
-}
-
-// ❌ DELETE BOOKING
-export async function DELETE(req) {
-  const { id } = await req.json();
-
-  const client = await clientPromise;
-  const db = client.db(process.env.DB_NAME);
-
-  await db.collection("bookings").deleteOne({
-    _id: new ObjectId(id)
-  });
-
-  return Response.json({ success: true });
-}
-
-
-/*import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
-
-// ✅ CREATE BOOKING
-export async function POST(req) {
-  const data = await req.json();
-
-  if (!data.name || !data.date || !data.start || !data.end) {
-    return Response.json({ error: "Missing fields" }, { status: 400 });
-  }
-
-  const client = await clientPromise;
-  const db = client.db(process.env.DB_NAME);
-
-  // 🚫 Prevent overlap
-  const existing = await db.collection("bookings").findOne({
-  date: data.date,
-  $or: [
-    {
-      start: { $lt: data.end },
-      end: { $gt: data.start }
+    if (!data.name || !data.contact || !data.date || !data.start || !data.end) {
+      return Response.json(
+        { error: "Please fill all fields" },
+        { status: 400 }
+      );
     }
-  ]
-});
-  if (existing) {
+
+    const startNum = toHour(data.start);
+    const endNum = toHour(data.end);
+
+    if (endNum <= startNum) {
+      return Response.json(
+        { error: "Invalid time selection" },
+        { status: 400 }
+      );
+    }
+
+    const client = await clientPromise;
+    const db = client.db(process.env.DB_NAME);
+
+    // 🚫 prevent overlap
+    const existing = await db.collection("bookings").findOne({
+      date: data.date,
+      court: "Court 1",
+      status: { $ne: "cancelled" },
+      startNum: { $lt: endNum },
+      endNum: { $gt: startNum },
+    });
+
+    if (existing) {
+      return Response.json(
+        { error: "Time slot already booked" },
+        { status: 400 }
+      );
+    }
+
+    await db.collection("bookings").insertOne({
+      name: data.name,
+      contact: data.contact,
+      date: data.date,
+      start: String(data.start),
+      end: String(data.end),
+      startNum,
+      endNum,
+      price: data.price,
+      court: "Court 1",
+      status: "active",
+      createdAt: new Date(),
+    });
+
+    return Response.json({ success: true });
+  } catch (error) {
     return Response.json(
-      { error: "Time slot already booked" },
-      { status: 400 }
+      { error: "Booking failed" },
+      { status: 500 }
     );
   }
-
-  await db.collection("bookings").insertOne({
-    name: data.name,
-    contact: data.contact,
-    date: data.date,
-    start: data.start,
-    end: data.end,
-    price: data.price,
-    court: "Court 1",
-    status: "confirmed",
-    createdAt: new Date()
-  });
-
-  return Response.json({ success: true });
 }
 
-// ✅ GET BOOKINGS (WITH FILTER)
+// ✅ GET BOOKINGS
 export async function GET(req) {
   const client = await clientPromise;
   const db = client.db(process.env.DB_NAME);
@@ -222,36 +86,22 @@ export async function GET(req) {
   const bookings = await db
     .collection("bookings")
     .find(query)
-    .sort({ start: 1 })
+    .sort({ startNum: 1 })
     .toArray();
 
   return Response.json(bookings);
 }
 
+// ❌ DELETE
 export async function DELETE(req) {
-  const { searchParams } = new URL(req.url)
-  const id = searchParams.get("id")
+  const { id } = await req.json();
 
-  const client = await clientPromise
-  const db = client.db(process.env.DB_NAME)
+  const client = await clientPromise;
+  const db = client.db(process.env.DB_NAME);
 
   await db.collection("bookings").deleteOne({
-    _id: new ObjectId(id)
-  })
+    _id: new ObjectId(id),
+  });
 
-  return Response.json({ success: true })
+  return Response.json({ success: true });
 }
-export async function PUT(req) {
-  const { searchParams } = new URL(req.url)
-  const id = searchParams.get("id")
-
-  const client = await clientPromise
-  const db = client.db(process.env.DB_NAME)
-
-  await db.collection("bookings").updateOne(
-    { _id: new ObjectId(id) },
-    { $set: { status: "cancelled" } }
-  )
-
-  return Response.json({ success: true })
-}*/

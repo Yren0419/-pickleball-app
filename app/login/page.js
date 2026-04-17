@@ -34,6 +34,7 @@ const login = async () => {
         </h1>
 
         <input
+        
         placeholder="Username"
           value={user}
         onChange={(e) => setUser(e.target.value.trim())}
