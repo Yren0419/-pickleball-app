@@ -222,7 +222,26 @@ export default function Dashboard() {
       return acc;
     }, {})
   ).sort((a, b) => new Date(a[0]) - new Date(b[0]));
+  
+  const getHour = (b, keyNum, keyStr) => {
+  const val = b?.[keyNum] ?? b?.[keyStr];
 
+  if (val === null || val === undefined || val === "") return null;
+
+  const match = String(val).match(/\d{1,2}/);
+  return match ? Number(match[0]) : null;
+};
+
+const formatTime = (b, keyNum, keyStr) => {
+  const t = getHour(b, keyNum, keyStr);
+
+  if (t === null) return "--";
+
+  if (t === 0) return "12:00 AM";
+  if (t < 12) return `${t}:00 AM`;
+  if (t === 12) return `12:00 PM`;
+  return `${t - 12}:00 PM`;
+};
   return (
     <div className="min-h-screen bg-gray-100 text-black">
       {/* HEADER */}
@@ -408,10 +427,16 @@ export default function Dashboard() {
 
                     <div className="space-y-3">
                       {items
-                        .sort(
-                          (a, b) =>
-                            a.startNum - b.startNum
-                        )
+      .sort((a, b) => {
+  const getTime = (item) => {
+    const val = item?.startNum ?? item?.start ?? 0;
+
+    const match = String(val).match(/\d{1,2}/);
+    return match ? Number(match[0]) : 0;
+  };
+
+  return getTime(a) - getTime(b);
+})
                         .map((b) => (
                           <div
                             key={b._id}
@@ -426,7 +451,26 @@ export default function Dashboard() {
                             </p>
 
                             <p className="text-sm mt-1">
-                              {b.start}:00 - {b.end}:00
+                             {(() => {
+  const get = (val) => {
+    if (val === undefined || val === null) return null;
+    const match = String(val).match(/\d{1,2}/);
+    return match ? Number(match[0]) : null;
+  };
+
+  const start = get(b.startNum ?? b.start);
+  const end = get(b.endNum ?? b.end);
+
+  const format = (t) => {
+    if (t === null) return "--";
+    if (t === 0) return "12:00 AM";
+    if (t < 12) return `${t}:00 AM`;
+    if (t === 12) return `12:00 PM`;
+    return `${t - 12}:00 PM`;
+  };
+
+  return `${format(start)} → ${format(end)}`;
+})()}
                             </p>
 
                             <div className="grid grid-cols-3 gap-2 mt-3">

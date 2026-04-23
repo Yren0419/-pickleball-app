@@ -6,18 +6,23 @@ export async function POST(req) {
   try {
     const data = await req.json();
 
-    const startNum = Number(data.start);
-    const endNum = Number(data.end);
+    // ✅ FORCE CLEAN NUMBERS
+    const startNum = parseInt(data.start, 10);
+    const endNum = parseInt(data.end, 10);
 
-    // ✅ REQUIRED FIELDS ONLY
-    if (!data.name || !data.date || isNaN(startNum) || isNaN(endNum)) {
+    // ✅ STRICT VALIDATION
+    if (
+      !data.name ||
+      !data.date ||
+      !Number.isInteger(startNum) ||
+      !Number.isInteger(endNum)
+    ) {
       return Response.json(
-        { error: "Missing required fields" },
+        { error: "Invalid booking data" },
         { status: 400 }
       );
     }
 
-    // ❗ VALIDATE TIME
     if (endNum <= startNum) {
       return Response.json(
         { error: "End must be after start" },
@@ -25,7 +30,6 @@ export async function POST(req) {
       );
     }
 
-    // 📱 OPTIONAL CONTACT VALIDATION
     if (data.contact && !/^09\d{9}$/.test(data.contact)) {
       return Response.json(
         { error: "Invalid contact number" },
@@ -57,7 +61,7 @@ export async function POST(req) {
 
     await db.collection("bookings").insertOne({
       name: data.name,
-      contact: data.contact || "", // ✅ optional safe save
+      contact: data.contact || "",
       date: data.date,
       startNum,
       endNum,
@@ -72,7 +76,7 @@ export async function POST(req) {
   }
 }
 
-// 📅 GET
+// 📅 GET BOOKINGS
 export async function GET(req) {
   const client = await clientPromise;
   const db = client.db(process.env.DB_NAME);
