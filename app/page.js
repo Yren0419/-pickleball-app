@@ -155,7 +155,7 @@ export default function Home() {
         {/* DEFAULT INFO */}
         <ul className="space-y-2 text-gray-700 mb-4">
           <li>✔ Open Monday - Saturday</li>
-          <li>✔ Morning: 7AM - 10AM</li>
+          <li>✔ Morning: 6AM - 10AM</li>
           <li>✔ Evening: 4PM - 8PM</li>
           <li>✔ Rate: ₱100 per hour</li>
         </ul>
