@@ -1,31 +1,34 @@
-// app/api/book/route.js
-
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-// convert hour safely
-function toHour(value) {
-  return Number(String(value).split(":")[0]);
-}
-
-// ✅ CREATE BOOKING
+// 🔥 CREATE BOOKING
 export async function POST(req) {
   try {
     const data = await req.json();
 
-    if (!data.name || !data.contact || !data.date || !data.start || !data.end) {
+    const startNum = Number(data.start);
+    const endNum = Number(data.end);
+
+    // ✅ REQUIRED FIELDS ONLY
+    if (!data.name || !data.date || isNaN(startNum) || isNaN(endNum)) {
       return Response.json(
-        { error: "Please fill all fields" },
+        { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    const startNum = toHour(data.start);
-    const endNum = toHour(data.end);
-
+    // ❗ VALIDATE TIME
     if (endNum <= startNum) {
       return Response.json(
-        { error: "Invalid time selection" },
+        { error: "End must be after start" },
+        { status: 400 }
+      );
+    }
+
+    // 📱 OPTIONAL CONTACT VALIDATION
+    if (data.contact && !/^09\d{9}$/.test(data.contact)) {
+      return Response.json(
+        { error: "Invalid contact number" },
         { status: 400 }
       );
     }
@@ -33,46 +36,43 @@ export async function POST(req) {
     const client = await clientPromise;
     const db = client.db(process.env.DB_NAME);
 
-    // 🚫 prevent overlap
-    const existing = await db.collection("bookings").findOne({
+    // 🔥 OVERLAP CHECK
+    const overlap = await db.collection("bookings").findOne({
       date: data.date,
-      court: "Court 1",
       status: { $ne: "cancelled" },
-      startNum: { $lt: endNum },
-      endNum: { $gt: startNum },
+      $expr: {
+        $and: [
+          { $lt: ["$startNum", endNum] },
+          { $gt: ["$endNum", startNum] },
+        ],
+      },
     });
 
-    if (existing) {
+    if (overlap) {
       return Response.json(
-        { error: "Time slot already booked" },
+        { error: "Slot already booked" },
         { status: 400 }
       );
     }
 
     await db.collection("bookings").insertOne({
       name: data.name,
-      contact: data.contact,
+      contact: data.contact || "", // ✅ optional safe save
       date: data.date,
-      start: String(data.start),
-      end: String(data.end),
       startNum,
       endNum,
       price: data.price,
-      court: "Court 1",
       status: "active",
       createdAt: new Date(),
     });
 
     return Response.json({ success: true });
-  } catch (error) {
-    return Response.json(
-      { error: "Booking failed" },
-      { status: 500 }
-    );
+  } catch (err) {
+    return Response.json({ error: "Server error" }, { status: 500 });
   }
 }
 
-// ✅ GET BOOKINGS
+// 📅 GET
 export async function GET(req) {
   const client = await clientPromise;
   const db = client.db(process.env.DB_NAME);
@@ -80,12 +80,9 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const date = searchParams.get("date");
 
-  let query = {};
-  if (date) query.date = date;
-
   const bookings = await db
     .collection("bookings")
-    .find(query)
+    .find(date ? { date } : {})
     .sort({ startNum: 1 })
     .toArray();
 

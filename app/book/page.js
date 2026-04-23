@@ -1,91 +1,115 @@
-// app/book/page.js
-// UPDATED:
-// ✅ Hours now 6AM–10AM and 4PM–8PM
-// ✅ Shows available hours after selecting date
-// ✅ Confirmation page still included
-
 "use client";
 import { useState, useEffect } from "react";
 
-export default function Book() {
+export default function BookPage() {
   const [date, setDate] = useState("");
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
-  const [bookings, setBookings] = useState([]);
-  const [agreed, setAgreed] = useState(false);
 
+  const [today, setToday] = useState("");
+  const [max, setMax] = useState("");
+
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
+
+  const [bookings, setBookings] = useState([]);
   const [confirmed, setConfirmed] = useState(false);
-  const [receipt, setReceipt] = useState(null);
 
   const rate = 100;
 
-  const today = new Date().toISOString().split("T")[0];
-
-  const maxDate = new Date();
-  maxDate.setMonth(maxDate.getMonth() + 3);
-  const max = maxDate.toISOString().split("T")[0];
-
-  // ✅ NEW HOURS
+  const allSlots = [6, 7, 8, 9, 10, 16, 17, 18, 19, 20];
   const startSlots = [6, 7, 8, 9, 16, 17, 18, 19];
-  const endSlots = [7, 8, 9, 10, 17, 18, 19, 20];
 
-  const loadBookings = async (selectedDate = "") => {
-    let url = "/api/book";
-    if (selectedDate) url += `?date=${selectedDate}`;
-
-    const res = await fetch(url);
-    const data = await res.json();
-    setBookings(data);
-  };
-
+  // ✅ safe date init (no hydration issues)
   useEffect(() => {
-    if (date) loadBookings(date);
-    else setBookings([]);
-  }, [date]);
+    const now = new Date();
+    const future = new Date();
+    future.setMonth(now.getMonth() + 3);
 
-  const calculatePrice = () => {
-    if (!start || !end) return 0;
-    return (Number(end) - Number(start)) * rate;
-  };
-
-  const isBooked = (time) => {
-    return bookings.some(
-      (b) =>
-        b.status !== "cancelled" &&
-        Number(time) >= Number(b.startNum) &&
-        Number(time) < Number(b.endNum)
-    );
-  };
-
-  // ✅ AVAILABLE SLOTS DISPLAY
-  const availableSlots = startSlots.filter((t) => !isBooked(t));
+    setToday(now.toISOString().split("T")[0]);
+    setMax(future.toISOString().split("T")[0]);
+  }, []);
 
   const formatTime = (t) => {
-    if (t === 12) return "12:00 PM";
     if (t < 12) return `${t}:00 AM`;
+    if (t === 12) return `12:00 PM`;
     return `${t - 12}:00 PM`;
   };
 
+  // 🔥 LIVE SYNC BOOKINGS (single source of truth)
+  useEffect(() => {
+    if (!date) return;
+
+    const fetchBookings = async () => {
+      const res = await fetch(`/api/book?date=${date}`);
+      const data = await res.json();
+      setBookings(data);
+    };
+
+    fetchBookings();
+    const interval = setInterval(fetchBookings, 3000);
+
+    return () => clearInterval(interval);
+  }, [date]);
+
+  // 🔥 BLOCK ENGINE (Airbnb logic)
+  const getBlocked = () => {
+    const blocked = new Set();
+
+    bookings
+      .filter(b => b.status !== "cancelled")
+      .forEach(b => {
+        for (let t = b.startNum; t < b.endNum; t++) {
+          blocked.add(t);
+        }
+      });
+
+    return blocked;
+  };
+
+  const blocked = getBlocked();
+
+  const isBlocked = (t) => blocked.has(Number(t));
+
+  // 🔥 END SLOT LOGIC (Airbnb boundary-safe)
+  const validEndSlots = () => {
+    if (!start) return [];
+
+    const startNum = Number(start);
+    const result = [];
+
+    for (let t of allSlots) {
+      if (t <= startNum) continue;
+
+      // stop only on real conflict
+      if (blocked.has(t) && t !== startNum + 1) break;
+
+      result.push(t);
+    }
+
+    return result;
+  };
+
+  const duration =
+    start && end ? Number(end) - Number(start) : 0;
+
+  const total = duration * rate;
+
+  // 🔥 BOOKING
   const handleBooking = async () => {
-    if (!name || !contact || !date || !start || !end) {
-      alert("Please fill all fields");
-      return;
-    }
+    if (!name || !date || !start || !end) {
+  alert("Complete all required fields");
+  return;
+}
 
-    if (!agreed) {
-      alert("Please agree to cancellation policy");
-      return;
-    }
-
-    const total = calculatePrice();
+if (contact && !/^09\d{9}$/.test(contact)) {
+  alert("Enter valid contact number");
+  return;
+}
 
     const res = await fetch("/api/book", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
         contact,
@@ -103,234 +127,172 @@ export default function Book() {
       return;
     }
 
-    setReceipt({
-      name,
-      contact,
-      date,
-      start,
-      end,
-      total,
-    });
-
     setConfirmed(true);
-
-    setName("");
-    setContact("");
-    setDate("");
-    setStart("");
-    setEnd("");
-    setAgreed(false);
   };
 
-  // ✅ CONFIRMATION PAGE
-  if (confirmed && receipt) {
+  if (confirmed) {
     return (
-      <div className="min-h-screen bg-cover bg-center flex items-center justify-center p-4 md:p-6" style={{ backgroundImage: "url('/logo.png')" }}>
-        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl p-6">
-
-          <h1 className="text-3xl font-bold text-green-600 mb-4 text-center">
-            Booking Confirmed 🎉
+      <div className="min-h-screen bg-black flex items-center justify-center text-white">
+        <div className="bg-zinc-900 p-10 rounded-3xl border border-green-500 text-center">
+          <h1 className="text-4xl font-bold text-green-400 mb-4">
+            Confirmed 🎉
           </h1>
 
-          <div className="space-y-3 border rounded-xl p-4 mb-5 text-black">
-            <p><strong>Name:</strong> {receipt.name}</p>
-            <p><strong>Contact:</strong> {receipt.contact}</p>
-            <p><strong>Date:</strong> {receipt.date}</p>
-            <p>
-              <strong>Time:</strong>{" "}
-              {formatTime(Number(receipt.start))} - {formatTime(Number(receipt.end))}
-            </p>
-            <p><strong>Total:</strong> ₱{receipt.total}</p>
-          </div>
+          <p>{date}</p>
+          <p>
+            {formatTime(Number(start))} → {formatTime(Number(end))}
+          </p>
 
-          <button
-            onClick={() => {
-              setConfirmed(false);
-              setReceipt(null);
-            }}
-            className="bg-green-500 text-white w-full py-3 rounded-xl"
-          >
-            Book Again
-          </button>
+          <p className="mt-3 text-green-400 font-bold">
+            ₱{total}
+          </p>
 
           <a
-            href="/"
-            className="block text-center mt-3 text-green-600 font-semibold"
+            href="/book"
+            className="block mt-6 bg-green-500 py-3 rounded-xl font-bold"
           >
-            ← Back Home
+            Book Again
           </a>
-
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center p-4 md:p-6"
-      style={{ backgroundImage: "url('/logo.png')" }}
-    >
-      <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
+    <div className="min-h-screen bg-black text-white p-6">
 
-        {/* LEFT */}
-        <div className="bg-white p-6 rounded-2xl shadow">
+           {/* NAVBAR */}
+      <div className="max-w-7xl mx-auto flex justify-between items-center mb-8 border-b border-zinc-800 pb-4">
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" className="w-12 h-12 rounded-full" />
+          <div>
+            <h1 className="text-2xl font-bold text-green-400">
+              D'bckyrd
+            </h1>
+            <p className="text-sm text-zinc-400">
+              Pickleball Court Booking
+            </p>
+          </div>
+        </div>
 
-          <a href="/" className="text-green-600 font-semibold hover:underline">
-            ← Home
-          </a>
+        <a
+          href="/"
+          className="bg-green-500 hover:bg-green-600 px-5 py-2 rounded-xl font-semibold"
+        >
+          Home
+        </a>
+      </div>
 
-          <p className="text-sm text-red-500 mb-3">
-            ⚠️ Please cancel at least 3 hours before schedule.
-          </p>
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-6">
+  {/* FORM */}
+  <div className="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
 
-          <h1 className="text-xl text-black font-bold mb-4">
-            Book a Schedule
-          </h1>
+    {/* NAME */}
+    <input
+      type="text"
+      placeholder="Name"
+      className="w-full p-3 mb-3 bg-black border border-zinc-700 rounded-xl text-white"
+      onChange={(e) => setName(e.target.value)}
+    />
 
-          <input
-            type="text"
-            placeholder="Your Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="border p-3 w-full rounded mb-2 text-black"
-          />
+    {/* CONTACT OPTIONAL */}
+    <div className="mb-3">
+      <input
+        type="tel"
+        inputMode="numeric"
+        maxLength={11}
+        value={contact}
+        placeholder="Contact Number (Optional)"
+        className="w-full p-3 bg-black border border-zinc-700 rounded-xl text-white"
+        onChange={(e) => {
+          const numbersOnly = e.target.value.replace(/\D/g, "");
 
-          <input
-            type="text"
-            placeholder="Contact Number"
-            value={contact}
-            onChange={(e) => setContact(e.target.value)}
-            className="border p-3 w-full rounded mb-2 text-black"
-          />
+          if (numbersOnly.length <= 11) {
+            setContact(numbersOnly);
+          }
+        }}
+      />
 
-          <input
-            type="date"
-            value={date}
-            min={today}
-            max={max}
-            onChange={(e) => {
-              const selected = e.target.value;
+      <p className="text-xs text-zinc-400 mt-1 px-1">
+        Optional • Numbers only • Format: 09XXXXXXXXX
+      </p>
+    </div>
 
-              if (new Date(selected).getDay() === 0) {
-                alert("Closed on Sundays");
-                return;
-              }
+          {/* DATE */}
+          <div className="mb-5">
+            <label className="text-sm text-zinc-400 mb-2 block">
+              Select Date
+            </label>
 
-              setDate(selected);
-              setStart("");
-              setEnd("");
-            }}
-            className="border p-3 w-full rounded mb-2 text-black"
-          />
-
-          {/* AVAILABLE TODAY */}
-          {date && (
-            <div className="bg-green-50 border rounded-xl p-3 mb-3 text-sm text-black">
-              <strong>Available Hours:</strong>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {availableSlots.length > 0 ? (
-                  availableSlots.map((t) => (
-                    <span
-                      key={t}
-                      className="bg-white border px-2 py-1 rounded"
-                    >
-                      {formatTime(t)}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-red-500">Fully Booked</span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TIME */}
-          <div className="grid grid-cols-2 gap-2 mb-3">
-
-            <select
-              value={start}
-              disabled={!date}
-              onChange={(e) => {
-                setStart(e.target.value);
-                setEnd("");
-              }}
-              className="border p-3 rounded text-black"
-            >
-              <option value="">Start</option>
-
-              {startSlots.map((t) => (
-                <option key={t} value={t} disabled={isBooked(t)}>
-                  {formatTime(t)}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={end}
-              disabled={!date || !start}
-              onChange={(e) => setEnd(e.target.value)}
-              className="border p-3 rounded text-black"
-            >
-              <option value="">End</option>
-
-              {endSlots
-                .filter((t) => t > Number(start))
-                .map((t) => (
-                  <option
-                    key={t}
-                    value={t}
-                    disabled={isBooked(t - 1)}
-                  >
-                    {formatTime(t)}
-                  </option>
-                ))}
-            </select>
-
+            <input
+              type="date"
+              value={date}
+              min={today}
+              max={max}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full p-4 bg-zinc-950 text-white border border-zinc-800 rounded-2xl cursor-pointer"
+            />
           </div>
 
-          <label className="flex gap-2 text-sm text-black mb-3">
-            <input
-              type="checkbox"
-              checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
-            />
-            I understand the cancellation policy
-          </label>
+          {/* START */}
+          <select
+            value={start}
+            onChange={(e) => {
+              setStart(e.target.value);
+              setEnd("");
+            }}
+            className="w-full p-3 mb-3 bg-black border border-zinc-700 rounded-xl"
+          >
+            <option value="">Start Time</option>
+
+            {startSlots.map((t) => (
+              <option key={t} value={t} disabled={isBlocked(t)}>
+                {formatTime(t)}
+              </option>
+            ))}
+          </select>
+
+          {/* END */}
+          <select
+            value={end}
+            onChange={(e) => setEnd(e.target.value)}
+            className="w-full p-3 mb-4 bg-black border border-zinc-700 rounded-xl"
+          >
+            <option value="">End Time</option>
+
+            {validEndSlots().map((t) => (
+              <option key={t} value={t}>
+                {formatTime(t)}
+              </option>
+            ))}
+          </select>
+
+          <div className="mb-4 text-green-400 font-bold">
+            Total: ₱{total}
+          </div>
 
           <button
             onClick={handleBooking}
-            className="bg-green-500 text-white py-3 rounded-lg w-full"
+            className="w-full bg-green-500 py-3 rounded-xl font-bold"
           >
-            Book Now
+            Confirm Booking
           </button>
-
         </div>
 
-        {/* RIGHT */}
-        <div className="bg-white text-black p-6 rounded-2xl shadow h-fit sticky top-6">
+        {/* SCHEDULE */}
+        <div className="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
+          <h2 className="text-xl font-bold text-green-400 mb-4">
+            Court Schedule
+          </h2>
 
-          <h2 className="text-xl font-bold mb-4">Booking Summary</h2>
-
-          <p>D'bckyrd</p>
-          <p>Date: {date || "-"}</p>
-
-          <p>
-            Time:
-            {start && end
-              ? ` ${formatTime(Number(start))} - ${formatTime(Number(end))}`
-              : " -"}
-          </p>
-
-          <hr className="my-4" />
-
-          <p className="text-lg font-bold">
-            Total: ₱{calculatePrice()}
-          </p>
-
-          <p className="text-sm text-gray-500">
-            ₱100 per hour
-          </p>
-
+          {allSlots.map((t) => (
+            <div key={t} className="flex justify-between p-3 border-b border-zinc-800">
+              <span>{formatTime(t)}</span>
+              <span className={isBlocked(t) ? "text-red-400" : "text-green-400"}>
+                {isBlocked(t) ? "BOOKED" : "OPEN"}
+              </span>
+            </div>
+          ))}
         </div>
 
       </div>
