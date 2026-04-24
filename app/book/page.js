@@ -3,24 +3,24 @@ import { useState, useEffect } from "react";
 
 export default function BookPage() {
   const [date, setDate] = useState("");
-  const [name, setName] = useState("");
-  const [contact, setContact] = useState("");
-
   const [today, setToday] = useState("");
   const [max, setMax] = useState("");
 
+  const [name, setName] = useState("");
+  const [contact, setContact] = useState("");
+
   const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
+  const [duration, setDuration] = useState("");
 
   const [bookings, setBookings] = useState([]);
   const [confirmed, setConfirmed] = useState(false);
 
   const rate = 100;
 
-  const allSlots = [6, 7, 8, 9, 10, 16, 17, 18, 19, 20];
-  const startSlots = [6, 7, 8, 9, 16, 17, 18, 19];
+  // BOOKABLE HOURS
+  const slots = [6, 7, 8, 9, 16, 17, 18, 19];
 
-  // ✅ safe date init (no hydration issues)
+  // DATE INIT
   useEffect(() => {
     const now = new Date();
     const future = new Date();
@@ -36,7 +36,7 @@ export default function BookPage() {
     return `${t - 12}:00 PM`;
   };
 
-  // 🔥 LIVE SYNC BOOKINGS (single source of truth)
+  // FETCH BOOKINGS
   useEffect(() => {
     if (!date) return;
 
@@ -47,18 +47,19 @@ export default function BookPage() {
     };
 
     fetchBookings();
+
     const interval = setInterval(fetchBookings, 3000);
 
     return () => clearInterval(interval);
   }, [date]);
 
-  // 🔥 BLOCK ENGINE (Airbnb logic)
+  // BLOCKED HOURS
   const getBlocked = () => {
     const blocked = new Set();
 
     bookings
-      .filter(b => b.status !== "cancelled")
-      .forEach(b => {
+      .filter((b) => b.status !== "cancelled")
+      .forEach((b) => {
         for (let t = b.startNum; t < b.endNum; t++) {
           blocked.add(t);
         }
@@ -69,47 +70,65 @@ export default function BookPage() {
 
   const blocked = getBlocked();
 
-  const isBlocked = (t) => blocked.has(Number(t));
+  const isBlocked = (t) => blocked.has(t);
 
-  // 🔥 END SLOT LOGIC (Airbnb boundary-safe)
-  const validEndSlots = () => {
+  // AVAILABLE START TIMES
+  const availableStarts = slots.filter((t) => !isBlocked(t));
+
+  // MAX HOURS USER CAN BOOK
+  const getValidDurations = () => {
     if (!start) return [];
 
     const startNum = Number(start);
     const result = [];
 
-    for (let t of allSlots) {
-      if (t <= startNum) continue;
+    for (let hrs = 1; hrs <= 4; hrs++) {
+      let ok = true;
 
-      // stop only on real conflict
-      if (blocked.has(t) && t !== startNum + 1) break;
+      for (let i = 0; i < hrs; i++) {
+        const current = startNum + i;
 
-      result.push(t);
+        // morning cut
+        if (startNum < 12 && current > 9) ok = false;
+
+        // evening cut
+        if (startNum >= 12 && current > 19) ok = false;
+
+        if (blocked.has(current)) ok = false;
+      }
+
+      if (ok) result.push(hrs);
     }
 
     return result;
   };
 
-  const duration =
-    start && end ? Number(end) - Number(start) : 0;
+  const validDurations = getValidDurations();
 
-  const total = duration * rate;
+  const end =
+    start && duration
+      ? Number(start) + Number(duration)
+      : "";
 
-  // 🔥 BOOKING
+  const total =
+    duration ? Number(duration) * rate : 0;
+
   const handleBooking = async () => {
-    if (!name || !date || !start || !end) {
-  alert("Complete all required fields");
-  return;
-}
+    if (!name || !date || !start || !duration) {
+      alert("Complete all required fields");
+      return;
+    }
 
-if (contact && !/^09\d{9}$/.test(contact)) {
-  alert("Enter valid contact number");
-  return;
-}
+    if (contact && !/^09\d{9}$/.test(contact)) {
+      alert("Enter valid contact number");
+      return;
+    }
 
     const res = await fetch("/api/book", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         name,
         contact,
@@ -130,6 +149,7 @@ if (contact && !/^09\d{9}$/.test(contact)) {
     setConfirmed(true);
   };
 
+  // SUCCESS PAGE
   if (confirmed) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center text-white">
@@ -139,8 +159,14 @@ if (contact && !/^09\d{9}$/.test(contact)) {
           </h1>
 
           <p>{date}</p>
+
           <p>
-            {formatTime(Number(start))} → {formatTime(Number(end))}
+            {formatTime(Number(start))} →{" "}
+            {formatTime(Number(end))}
+          </p>
+
+          <p className="mt-2">
+            Duration: {duration} hour(s)
           </p>
 
           <p className="mt-3 text-green-400 font-bold">
@@ -160,15 +186,19 @@ if (contact && !/^09\d{9}$/.test(contact)) {
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
-
-           {/* NAVBAR */}
+      {/* NAVBAR */}
       <div className="max-w-7xl mx-auto flex justify-between items-center mb-8 border-b border-zinc-800 pb-4">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" className="w-12 h-12 rounded-full" />
+          <img
+            src="/logo.png"
+            className="w-12 h-12 rounded-full"
+          />
+
           <div>
             <h1 className="text-2xl font-bold text-green-400">
               D'bckyrd
             </h1>
+
             <p className="text-sm text-zinc-400">
               Pickleball Court Booking
             </p>
@@ -177,103 +207,96 @@ if (contact && !/^09\d{9}$/.test(contact)) {
 
         <a
           href="/"
-          className="bg-green-500 hover:bg-green-600 px-5 py-2 rounded-xl font-semibold"
+          className="bg-green-500 px-5 py-2 rounded-xl font-semibold"
         >
           Home
         </a>
       </div>
 
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-6">
-  {/* FORM */}
-  <div className="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
+      <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-6">
+        {/* FORM */}
+        <div className="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
+          <input
+            type="text"
+            placeholder="Name"
+            className="w-full p-3 mb-3 bg-black border border-zinc-700 rounded-xl"
+            onChange={(e) => setName(e.target.value)}
+          />
 
-    {/* NAME */}
-    <input
-      type="text"
-      placeholder="Name"
-      className="w-full p-3 mb-3 bg-black border border-zinc-700 rounded-xl text-white"
-      onChange={(e) => setName(e.target.value)}
-    />
+          <input
+            type="tel"
+            placeholder="Contact Number (Optional)"
+            maxLength={11}
+            value={contact}
+            className="w-full p-3 mb-3 bg-black border border-zinc-700 rounded-xl"
+            onChange={(e) =>
+              setContact(
+                e.target.value.replace(/\D/g, "")
+              )
+            }
+          />
 
-    {/* CONTACT OPTIONAL */}
-    <div className="mb-3">
-      <input
-        type="tel"
-        inputMode="numeric"
-        maxLength={11}
-        value={contact}
-        placeholder="Contact Number (Optional)"
-        className="w-full p-3 bg-black border border-zinc-700 rounded-xl text-white"
-        onChange={(e) => {
-          const numbersOnly = e.target.value.replace(/\D/g, "");
-
-          if (numbersOnly.length <= 11) {
-            setContact(numbersOnly);
-          }
-        }}
-      />
-
-      <p className="text-xs text-zinc-400 mt-1 px-1">
-        Optional • Numbers only • Format: 09XXXXXXXXX
-      </p>
-    </div>
-
-          {/* DATE */}
-          <div className="mb-5">
-            <label className="text-sm text-zinc-400 mb-2 block">
-              Select Date
-            </label>
-
-            <input
-              type="date"
-              value={date}
-              min={today}
-              max={max}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full p-4 bg-zinc-950 text-white border border-zinc-800 rounded-2xl cursor-pointer"
-            />
-          </div>
+          <input
+            type="date"
+            value={date}
+            min={today}
+            max={max}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full p-3 mb-3 bg-black border border-zinc-700 rounded-xl"
+          />
 
           {/* START */}
           <select
             value={start}
             onChange={(e) => {
               setStart(e.target.value);
-              setEnd("");
+              setDuration("");
             }}
             className="w-full p-3 mb-3 bg-black border border-zinc-700 rounded-xl"
           >
             <option value="">Start Time</option>
 
-            {startSlots.map((t) => (
-              <option key={t} value={t} disabled={isBlocked(t)}>
-                {formatTime(t)}
-              </option>
-            ))}
-          </select>
-
-          {/* END */}
-          <select
-            value={end}
-            onChange={(e) => setEnd(e.target.value)}
-            className="w-full p-3 mb-4 bg-black border border-zinc-700 rounded-xl"
-          >
-            <option value="">End Time</option>
-
-            {validEndSlots().map((t) => (
+            {availableStarts.map((t) => (
               <option key={t} value={t}>
                 {formatTime(t)}
               </option>
             ))}
           </select>
 
-          <div className="mb-4 text-green-400 font-bold">
-            Total: ₱{total}
-          </div>
+          {/* DURATION */}
+          <select
+            value={duration}
+            onChange={(e) =>
+              setDuration(e.target.value)
+            }
+            className="w-full p-3 mb-4 bg-black border border-zinc-700 rounded-xl"
+          >
+            <option value="">Duration</option>
+
+            {validDurations.map((d) => (
+              <option key={d} value={d}>
+                {d} Hour{d > 1 ? "s" : ""}
+              </option>
+            ))}
+          </select>
+
+          {/* SUMMARY */}
+          {start && duration && (
+            <div className="mb-4 bg-black p-4 rounded-xl border border-zinc-700">
+              <p>
+                Booking: {formatTime(Number(start))} →{" "}
+                {formatTime(Number(end))}
+              </p>
+
+              <p className="text-green-400 font-bold mt-2">
+                Total: ₱{total}
+              </p>
+            </div>
+          )}
 
           <button
             onClick={handleBooking}
-            className="w-full bg-green-500 py-3 rounded-xl font-bold"
+            className="w-full bg-green-500 py-3 rounded-xl font-bold hover:bg-green-600"
           >
             Confirm Booking
           </button>
@@ -282,19 +305,33 @@ if (contact && !/^09\d{9}$/.test(contact)) {
         {/* SCHEDULE */}
         <div className="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
           <h2 className="text-xl font-bold text-green-400 mb-4">
-            Court Schedule
+            Live Schedule
           </h2>
 
-          {allSlots.map((t) => (
-            <div key={t} className="flex justify-between p-3 border-b border-zinc-800">
-              <span>{formatTime(t)}</span>
-              <span className={isBlocked(t) ? "text-red-400" : "text-green-400"}>
-                {isBlocked(t) ? "BOOKED" : "OPEN"}
+          {slots.map((t) => (
+            <div
+              key={t}
+              className="flex justify-between p-3 border-b border-zinc-800"
+            >
+              <span>
+                {formatTime(t)} -{" "}
+                {formatTime(t + 1)}
+              </span>
+
+              <span
+                className={
+                  isBlocked(t)
+                    ? "text-red-400"
+                    : "text-green-400"
+                }
+              >
+                {isBlocked(t)
+                  ? "BOOKED"
+                  : "OPEN"}
               </span>
             </div>
           ))}
         </div>
-
       </div>
     </div>
   );
